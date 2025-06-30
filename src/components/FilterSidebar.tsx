@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -58,23 +57,25 @@ export const FilterSidebar = ({
 
   return (
     <div className="fixed inset-0 z-50 flex">
-      <div className="fixed inset-0 bg-black/50" onClick={onClose} />
-      <Card className="w-80 h-full bg-gray-900 border-gray-700 rounded-none border-r animate-slide-in-right">
-        <div className="p-6 space-y-6">
+      <div className="fixed inset-0 bg-black/50 dark:bg-black/70 backdrop-blur-sm" onClick={onClose} />
+      <Card className="w-80 h-full bg-background/95 dark:bg-background/95 backdrop-blur-xl border-border/50 rounded-none border-r animate-slide-in-right">
+        <div className="p-6 space-y-6 h-full overflow-y-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
-              <Filter className="h-5 w-5 text-blue-400" />
-              <h2 className="text-lg font-semibold text-white">Advanced Filters</h2>
+              <div className="p-2 rounded-lg bg-primary/10">
+                <Filter className="h-4 w-4 text-primary" />
+              </div>
+              <h2 className="text-lg font-semibold text-foreground">Advanced Filters</h2>
             </div>
-            <Button variant="ghost" size="sm" onClick={onClose}>
+            <Button variant="ghost" size="sm" onClick={onClose} className="hover:bg-accent/50">
               <X className="h-4 w-4" />
             </Button>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             <div>
-              <Label className="text-gray-300 flex items-center gap-2 mb-3">
-                <Activity className="h-4 w-4" />
+              <Label className="text-foreground flex items-center gap-2 mb-3 font-medium">
+                <Activity className="h-4 w-4 text-primary" />
                 Status
               </Label>
               <div className="flex flex-wrap gap-2">
@@ -82,7 +83,7 @@ export const FilterSidebar = ({
                   <Badge
                     key={status}
                     variant={localFilters.status.includes(status) ? "default" : "outline"}
-                    className="cursor-pointer"
+                    className="cursor-pointer transition-all duration-300 hover:scale-105"
                     onClick={() => toggleArrayFilter('status', status)}
                   >
                     {status}
@@ -91,11 +92,11 @@ export const FilterSidebar = ({
               </div>
             </div>
 
-            <Separator className="bg-gray-700" />
+            <Separator className="bg-border/50" />
 
             <div>
-              <Label className="text-gray-300 flex items-center gap-2 mb-3">
-                <MapPin className="h-4 w-4" />
+              <Label className="text-foreground flex items-center gap-2 mb-3 font-medium">
+                <MapPin className="h-4 w-4 text-primary" />
                 Locations
               </Label>
               <div className="flex flex-wrap gap-2">
@@ -103,7 +104,7 @@ export const FilterSidebar = ({
                   <Badge
                     key={location}
                     variant={localFilters.locations.includes(location) ? "default" : "outline"}
-                    className="cursor-pointer text-xs"
+                    className="cursor-pointer text-xs transition-all duration-300 hover:scale-105"
                     onClick={() => toggleArrayFilter('locations', location)}
                   >
                     {location}
@@ -112,11 +113,11 @@ export const FilterSidebar = ({
               </div>
             </div>
 
-            <Separator className="bg-gray-700" />
+            <Separator className="bg-border/50" />
 
             <div>
-              <Label className="text-gray-300 flex items-center gap-2 mb-3">
-                <CreditCard className="h-4 w-4" />
+              <Label className="text-foreground flex items-center gap-2 mb-3 font-medium">
+                <CreditCard className="h-4 w-4 text-primary" />
                 Membership Types
               </Label>
               <div className="flex flex-wrap gap-2">
@@ -124,7 +125,7 @@ export const FilterSidebar = ({
                   <Badge
                     key={type}
                     variant={localFilters.membershipTypes.includes(type) ? "default" : "outline"}
-                    className="cursor-pointer text-xs"
+                    className="cursor-pointer text-xs transition-all duration-300 hover:scale-105"
                     onClick={() => toggleArrayFilter('membershipTypes', type)}
                   >
                     {type}
@@ -133,14 +134,14 @@ export const FilterSidebar = ({
               </div>
             </div>
 
-            <Separator className="bg-gray-700" />
+            <Separator className="bg-border/50" />
 
             <div>
-              <Label className="text-gray-300 flex items-center gap-2 mb-3">
-                <Calendar className="h-4 w-4" />
+              <Label className="text-foreground flex items-center gap-2 mb-3 font-medium">
+                <Calendar className="h-4 w-4 text-primary" />
                 Date Range
               </Label>
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <Input
                   type="date"
                   value={localFilters.dateRange.start}
@@ -148,7 +149,7 @@ export const FilterSidebar = ({
                     ...prev,
                     dateRange: { ...prev.dateRange, start: e.target.value }
                   }))}
-                  className="bg-gray-800 border-gray-600"
+                  className="bg-background border-border/50 focus:border-primary transition-colors duration-300"
                 />
                 <Input
                   type="date"
@@ -157,16 +158,16 @@ export const FilterSidebar = ({
                     ...prev,
                     dateRange: { ...prev.dateRange, end: e.target.value }
                   }))}
-                  className="bg-gray-800 border-gray-600"
+                  className="bg-background border-border/50 focus:border-primary transition-colors duration-300"
                 />
               </div>
             </div>
 
-            <Separator className="bg-gray-700" />
+            <Separator className="bg-border/50" />
 
             <div>
-              <Label className="text-gray-300 mb-3 block">Sessions Range</Label>
-              <div className="grid grid-cols-2 gap-2">
+              <Label className="text-foreground mb-3 block font-medium">Sessions Range</Label>
+              <div className="grid grid-cols-2 gap-3">
                 <Input
                   type="number"
                   placeholder="Min"
@@ -175,7 +176,7 @@ export const FilterSidebar = ({
                     ...prev,
                     sessionsRange: { ...prev.sessionsRange, min: parseInt(e.target.value) || 0 }
                   }))}
-                  className="bg-gray-800 border-gray-600"
+                  className="bg-background border-border/50 focus:border-primary transition-colors duration-300"
                 />
                 <Input
                   type="number"
@@ -185,17 +186,17 @@ export const FilterSidebar = ({
                     ...prev,
                     sessionsRange: { ...prev.sessionsRange, max: parseInt(e.target.value) || 100 }
                   }))}
-                  className="bg-gray-800 border-gray-600"
+                  className="bg-background border-border/50 focus:border-primary transition-colors duration-300"
                 />
               </div>
             </div>
           </div>
 
-          <div className="flex gap-2 pt-4">
-            <Button onClick={handleApplyFilters} className="flex-1">
+          <div className="flex gap-3 pt-6 border-t border-border/50">
+            <Button onClick={handleApplyFilters} className="flex-1 bg-primary hover:bg-primary/90 transition-all duration-300">
               Apply Filters
             </Button>
-            <Button variant="outline" onClick={handleClearFilters}>
+            <Button variant="outline" onClick={handleClearFilters} className="border-border/50 hover:bg-accent/50">
               Clear
             </Button>
           </div>

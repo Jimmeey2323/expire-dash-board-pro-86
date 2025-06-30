@@ -1,14 +1,14 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
 import { MetricCard } from "@/components/MetricCard";
 import { FilterSidebar } from "@/components/FilterSidebar";
 import { DataTable } from "@/components/DataTable";
 import { MembershipChart } from "@/components/MembershipChart";
+import { QuickFilters } from "@/components/QuickFilters";
+import { ThemeToggle } from "@/components/ThemeToggle";
 import { googleSheetsService } from "@/services/googleSheets";
 import { MembershipData, FilterOptions } from "@/types/membership";
 import { 
@@ -18,10 +18,10 @@ import {
   TrendingUp, 
   Filter,
   Dumbbell,
-  MapPin,
-  Calendar,
   Activity,
-  RefreshCw
+  RefreshCw,
+  Settings,
+  BarChart3
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -39,7 +39,7 @@ const Index = () => {
   const { data: membershipData = [], isLoading, error, refetch } = useQuery({
     queryKey: ['membershipData'],
     queryFn: () => googleSheetsService.getMembershipData(),
-    refetchInterval: 300000, // Refetch every 5 minutes
+    refetchInterval: 300000,
   });
 
   useEffect(() => {
@@ -50,39 +50,33 @@ const Index = () => {
 
   const applyFilters = (data: MembershipData[]): MembershipData[] => {
     return data.filter(member => {
-      // Status filter
       if (filters.status.length > 0 && !filters.status.includes(member.status)) {
         return false;
       }
-
-      // Location filter
       if (filters.locations.length > 0 && !filters.locations.includes(member.location)) {
         return false;
       }
-
-      // Membership type filter
       if (filters.membershipTypes.length > 0 && !filters.membershipTypes.includes(member.membershipName)) {
         return false;
       }
-
-      // Sessions range filter
       if (member.sessionsLeft < filters.sessionsRange.min || member.sessionsLeft > filters.sessionsRange.max) {
         return false;
       }
-
-      // Date range filter
       if (filters.dateRange.start && new Date(member.endDate) < new Date(filters.dateRange.start)) {
         return false;
       }
       if (filters.dateRange.end && new Date(member.endDate) > new Date(filters.dateRange.end)) {
         return false;
       }
-
       return true;
     });
   };
 
   const applyQuickFilter = (data: MembershipData[]): MembershipData[] => {
+    const now = new Date();
+    const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+    const sevenDaysAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+
     switch (quickFilter) {
       case 'active':
         return data.filter(member => member.status === 'Active');
@@ -92,7 +86,20 @@ const Index = () => {
         return data.filter(member => member.sessionsLeft > 0);
       case 'no-sessions':
         return data.filter(member => member.sessionsLeft === 0);
+      case 'recent':
+        return data.filter(member => new Date(member.orderDate) >= thirtyDaysAgo);
+      case 'weekly':
+        return data.filter(member => new Date(member.orderDate) >= sevenDaysAgo);
+      case 'expiring':
+        return data.filter(member => {
+          const endDate = new Date(m.endDate);
+          return endDate >= now && endDate <= new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+        });
       default:
+        if (quickFilter.startsWith('location-')) {
+          const location = quickFilter.replace('location-', '');
+          return data.filter(member => member.location === location);
+        }
         return data;
     }
   };
@@ -112,63 +119,60 @@ const Index = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gray-950 flex items-center justify-center">
-        <div className="text-center space-y-4">
-          <RefreshCw className="h-12 w-12 text-blue-500 animate-spin mx-auto" />
-          <p className="text-white text-lg">Loading membership data...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center space-y-6 animate-fade-in">
+          <div className="relative">
+            <RefreshCw className="h-16 w-16 text-primary animate-spin mx-auto" />
+            <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
+          </div>
+          <div className="space-y-2">
+            <p className="text-xl font-semibold text-foreground">Loading Dashboard</p>
+            <p className="text-muted-foreground">Fetching membership data...</p>
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-950 text-white">
-      <div className="container mx-auto p-6 space-y-8">
-        {/* Header */}
-        <div className="flex items-center justify-between">
-          <div className="space-y-2">
-            <h1 className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
+    <div className="min-h-screen bg-background transition-colors duration-300">
+      {/* Background gradient */}
+      <div className="fixed inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none" />
+      
+      <div className="relative container mx-auto p-6 space-y-8">
+        {/* Enhanced Header */}
+        <div className="flex items-center justify-between animate-fade-in">
+          <div className="space-y-3">
+            <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-primary to-purple-600 bg-clip-text text-transparent">
               Studio Dashboard
             </h1>
-            <p className="text-gray-400">Comprehensive membership management and analytics</p>
+            <p className="text-lg text-muted-foreground font-medium">
+              Advanced membership management & analytics platform
+            </p>
           </div>
           <div className="flex items-center gap-4">
-            <Button onClick={handleRefresh} variant="outline" className="border-gray-600">
+            <ThemeToggle />
+            <Button onClick={handleRefresh} variant="outline" className="border-border/50 hover:bg-accent/50 transition-all duration-300">
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
-            <Button onClick={() => setIsFilterOpen(true)} className="bg-blue-600 hover:bg-blue-700">
+            <Button onClick={() => setIsFilterOpen(true)} className="bg-primary hover:bg-primary/90 shadow-lg transition-all duration-300">
               <Filter className="h-4 w-4 mr-2" />
               Advanced Filters
             </Button>
           </div>
         </div>
 
-        {/* Quick Filter Buttons */}
-        <div className="flex flex-wrap gap-3">
-          {[
-            { key: 'all', label: 'All Members', count: membershipData.length },
-            { key: 'active', label: 'Active', count: activeMembers.length },
-            { key: 'expired', label: 'Expired', count: expiredMembers.length },
-            { key: 'sessions', label: 'With Sessions', count: membersWithSessions.length },
-            { key: 'no-sessions', label: 'No Sessions', count: membershipData.length - membersWithSessions.length }
-          ].map(filter => (
-            <Button
-              key={filter.key}
-              variant={quickFilter === filter.key ? "default" : "outline"}
-              onClick={() => setQuickFilter(filter.key)}
-              className="flex items-center gap-2"
-            >
-              {filter.label}
-              <Badge variant="secondary" className="ml-1">
-                {filter.count}
-              </Badge>
-            </Button>
-          ))}
-        </div>
+        {/* Enhanced Quick Filters */}
+        <QuickFilters
+          quickFilter={quickFilter}
+          onQuickFilterChange={setQuickFilter}
+          membershipData={membershipData}
+          availableLocations={availableLocations}
+        />
 
-        {/* Metrics Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        {/* Enhanced Metrics Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
           <MetricCard
             title="Total Members"
             value={membershipData.length}
@@ -199,64 +203,82 @@ const Index = () => {
           />
         </div>
 
-        {/* Charts */}
-        <MembershipChart data={filteredData} />
+        {/* Enhanced Charts */}
+        <div className="animate-fade-in">
+          <MembershipChart data={filteredData} />
+        </div>
 
-        {/* Tabbed Data Tables */}
-        <Tabs defaultValue="overview" className="space-y-6">
-          <TabsList className="bg-gray-800 border-gray-700">
-            <TabsTrigger value="overview" className="data-[state=active]:bg-blue-600">
-              <Activity className="h-4 w-4 mr-2" />
-              Overview
-            </TabsTrigger>
-            <TabsTrigger value="active" className="data-[state=active]:bg-green-600">
-              <UserCheck className="h-4 w-4 mr-2" />
-              Active Members
-            </TabsTrigger>
-            <TabsTrigger value="expired" className="data-[state=active]:bg-red-600">
-              <UserX className="h-4 w-4 mr-2" />
-              Expired Members
-            </TabsTrigger>
-            <TabsTrigger value="sessions" className="data-[state=active]:bg-yellow-600">
-              <Dumbbell className="h-4 w-4 mr-2" />
-              Sessions Analysis
-            </TabsTrigger>
-          </TabsList>
+        {/* Enhanced Tabbed Data Tables */}
+        <div className="animate-fade-in">
+          <Tabs defaultValue="overview" className="space-y-6">
+            <Card className="p-1 border-border/50 bg-card/30 backdrop-blur-sm">
+              <TabsList className="grid w-full grid-cols-4 bg-transparent gap-1">
+                <TabsTrigger 
+                  value="overview" 
+                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300"
+                >
+                  <Activity className="h-4 w-4 mr-2" />
+                  Overview
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="active" 
+                  className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white transition-all duration-300"
+                >
+                  <UserCheck className="h-4 w-4 mr-2" />
+                  Active Members
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="expired" 
+                  className="data-[state=active]:bg-red-600 data-[state=active]:text-white transition-all duration-300"
+                >
+                  <UserX className="h-4 w-4 mr-2" />
+                  Expired Members
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="sessions" 
+                  className="data-[state=active]:bg-yellow-600 data-[state=active]:text-white transition-all duration-300"
+                >
+                  <Dumbbell className="h-4 w-4 mr-2" />
+                  Sessions Analysis
+                </TabsTrigger>
+              </TabsList>
+            </Card>
 
-          <TabsContent value="overview" className="space-y-6">
-            <DataTable 
-              data={filteredData} 
-              title="All Members Overview"
-            />
-          </TabsContent>
-
-          <TabsContent value="active" className="space-y-6">
-            <DataTable 
-              data={filteredData.filter(m => m.status === 'Active')} 
-              title="Active Members"
-            />
-          </TabsContent>
-
-          <TabsContent value="expired" className="space-y-6">
-            <DataTable 
-              data={filteredData.filter(m => m.status === 'Expired')} 
-              title="Expired Members"
-            />
-          </TabsContent>
-
-          <TabsContent value="sessions" className="space-y-6">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <TabsContent value="overview" className="space-y-6">
               <DataTable 
-                data={filteredData.filter(m => m.sessionsLeft > 0)} 
-                title="Members with Remaining Sessions"
+                data={filteredData} 
+                title="All Members Overview"
               />
+            </TabsContent>
+
+            <TabsContent value="active" className="space-y-6">
               <DataTable 
-                data={filteredData.filter(m => m.sessionsLeft === 0)} 
-                title="Members with No Sessions"
+                data={filteredData.filter(m => m.status === 'Active')} 
+                title="Active Members"
               />
-            </div>
-          </TabsContent>
-        </Tabs>
+            </TabsContent>
+
+            <TabsContent value="expired" className="space-y-6">
+              <DataTable 
+                data={filteredData.filter(m => m.status === 'Expired')} 
+                title="Expired Members"
+              />
+            </TabsContent>
+
+            <TabsContent value="sessions" className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <DataTable 
+                  data={filteredData.filter(m => m.sessionsLeft > 0)} 
+                  title="Members with Remaining Sessions"
+                />
+                <DataTable 
+                  data={filteredData.filter(m => m.sessionsLeft === 0)} 
+                  title="Members with No Sessions"
+                />
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
 
         {/* Filter Sidebar */}
         <FilterSidebar
