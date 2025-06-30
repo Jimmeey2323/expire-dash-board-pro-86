@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -8,19 +7,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { googleSheetsService } from "@/services/googleSheets";
 import { MembershipData } from "@/types/membership";
-import { 
-  TrendingDown, 
-  Calendar, 
-  Users, 
-  AlertTriangle,
-  ArrowLeft,
-  Calculator,
-  BarChart3,
-  FileSpreadsheet
-} from "lucide-react";
+import { TrendingDown, Calendar, Users, AlertTriangle, ArrowLeft, Calculator, BarChart3, FileSpreadsheet } from "lucide-react";
 import { toast } from "sonner";
 import { Link } from "react-router-dom";
-
 interface ChurnMetrics {
   month: string;
   startingMembers: number;
@@ -30,20 +19,21 @@ interface ChurnMetrics {
   churnRate: number;
   churnCount: number;
 }
-
 const ChurnAnalytics = () => {
-  const { data: membershipData = [], isLoading, error } = useQuery({
+  const {
+    data: membershipData = [],
+    isLoading,
+    error
+  } = useQuery({
     queryKey: ['membershipData'],
     queryFn: () => googleSheetsService.getMembershipData(),
-    refetchInterval: 300000,
+    refetchInterval: 300000
   });
-
   useEffect(() => {
     if (error) {
       toast.error("Failed to fetch membership data. Using sample data for demonstration.");
     }
   }, [error]);
-
   const currentMonth = new Date().getMonth();
   const currentYear = new Date().getFullYear();
 
@@ -59,22 +49,24 @@ const ChurnAnalytics = () => {
   const churnMetrics = useMemo(() => {
     const metrics: ChurnMetrics[] = [];
     const months = [];
-    
+
     // Generate last 12 months
     for (let i = 11; i >= 0; i--) {
       const date = new Date();
       date.setMonth(date.getMonth() - i);
       months.push({
-        month: date.toLocaleString('default', { month: 'long', year: 'numeric' }),
+        month: date.toLocaleString('default', {
+          month: 'long',
+          year: 'numeric'
+        }),
         monthIndex: date.getMonth(),
         year: date.getFullYear()
       });
     }
-
     months.forEach((monthData, index) => {
       const monthStart = new Date(monthData.year, monthData.monthIndex, 1);
       const monthEnd = new Date(monthData.year, monthData.monthIndex + 1, 0);
-      
+
       // Members active at start of month
       const startingMembers = membershipData.filter(member => {
         const endDate = new Date(member.endDate);
@@ -102,8 +94,7 @@ const ChurnAnalytics = () => {
       }).length;
 
       // Churn rate calculation: (Members Lost / Starting Members) * 100
-      const churnRate = startingMembers > 0 ? (expiredMembers / startingMembers) * 100 : 0;
-
+      const churnRate = startingMembers > 0 ? expiredMembers / startingMembers * 100 : 0;
       metrics.push({
         month: monthData.month,
         startingMembers,
@@ -114,16 +105,12 @@ const ChurnAnalytics = () => {
         churnCount: expiredMembers
       });
     });
-
     return metrics;
   }, [membershipData]);
-
   const currentMonthMetrics = churnMetrics[churnMetrics.length - 1];
   const previousMonthMetrics = churnMetrics[churnMetrics.length - 2];
-
   if (isLoading) {
-    return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
+    return <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
         <Card className="p-8 max-w-sm mx-auto bg-white shadow-2xl">
           <div className="text-center space-y-4">
             <BarChart3 className="h-12 w-12 text-blue-600 animate-spin mx-auto" />
@@ -131,12 +118,9 @@ const ChurnAnalytics = () => {
             <p className="text-slate-600">Calculating churn metrics...</p>
           </div>
         </Card>
-      </div>
-    );
+      </div>;
   }
-
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+  return <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       <div className="container mx-auto px-6 py-8 space-y-8">
         {/* Header */}
         <div className="flex items-center justify-between">
@@ -216,10 +200,7 @@ const ChurnAnalytics = () => {
               <h3 className="font-bold text-slate-700">Churn Change</h3>
             </div>
             <p className="text-3xl font-bold text-purple-600 mb-2">
-              {previousMonthMetrics 
-                ? `${((currentMonthMetrics?.churnRate || 0) - previousMonthMetrics.churnRate).toFixed(2)}%`
-                : 'N/A'
-              }
+              {previousMonthMetrics ? `${((currentMonthMetrics?.churnRate || 0) - previousMonthMetrics.churnRate).toFixed(2)}%` : 'N/A'}
             </p>
             <p className="text-sm text-slate-600">
               vs previous month
@@ -295,7 +276,7 @@ const ChurnAnalytics = () => {
                 <h3 className="text-2xl font-bold text-slate-900 mb-6">
                   Current Month Expiring/Expired Members ({currentMonthData.length})
                 </h3>
-                <div className="border-2 border-slate-100 rounded-2xl overflow-hidden">
+                <div className="border-2 border-slate-100 rounded-2xl overflow-hidden max-h-full">
                   <Table>
                     <TableHeader>
                       <TableRow className="bg-slate-50 border-b-2 border-slate-200">
@@ -309,13 +290,12 @@ const ChurnAnalytics = () => {
                         <TableHead className="font-bold text-slate-700">Location</TableHead>
                       </TableRow>
                     </TableHeader>
-                    <TableBody>
-                      {currentMonthData.map((member) => (
-                        <TableRow key={member.uniqueId} className="border-b border-slate-100 hover:bg-slate-50">
+                    <TableBody className="max-h-[30px] ">
+                      {currentMonthData.map(member => <TableRow key={member.uniqueId} className="border-b border-slate-100 hover:bg-slate-50 text-left whitespace-nowrap ">
                           <TableCell className="font-mono text-sm">{member.memberId}</TableCell>
-                          <TableCell className="font-medium">{member.firstName} {member.lastName}</TableCell>
-                          <TableCell className="text-slate-600">{member.email}</TableCell>
-                          <TableCell className="text-slate-600">{member.membershipName}</TableCell>
+                          <TableCell className="font-medium min-w-52">{member.firstName} {member.lastName}</TableCell>
+                          <TableCell className="text-slate-600 min-w-52">{member.email}</TableCell>
+                          <TableCell className="text-slate-600 min-w-52">{member.membershipName}</TableCell>
                           <TableCell>
                             <div className="flex items-center gap-2">
                               <span>{new Date(member.endDate).toLocaleDateString()}</span>
@@ -323,18 +303,17 @@ const ChurnAnalytics = () => {
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge variant={member.status === 'Active' ? "default" : "destructive"}>
+                            <Badge variant={member.status === 'Active' ? "default" : "destructive"} className="min-w-36 py-2">
                               {member.status}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center">
-                            <Badge variant={member.sessionsLeft > 0 ? "secondary" : "destructive"}>
+                            <Badge variant={member.sessionsLeft > 0 ? "secondary" : "destructive"} className="min-w-8 text-center ">
                               {member.sessionsLeft}
                             </Badge>
                           </TableCell>
                           <TableCell className="text-slate-600">{member.location}</TableCell>
-                        </TableRow>
-                      ))}
+                        </TableRow>)}
                     </TableBody>
                   </Table>
                 </div>
@@ -362,24 +341,19 @@ const ChurnAnalytics = () => {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {churnMetrics.map((metric, index) => (
-                        <TableRow key={metric.month} className="border-b border-slate-100 hover:bg-slate-50">
+                      {churnMetrics.map((metric, index) => <TableRow key={metric.month} className="border-b border-slate-100 hover:bg-slate-50">
                           <TableCell className="font-medium">{metric.month}</TableCell>
                           <TableCell className="text-center">{metric.startingMembers}</TableCell>
                           <TableCell className="text-center text-green-600 font-medium">+{metric.newMembers}</TableCell>
                           <TableCell className="text-center text-red-600 font-medium">-{metric.expiredMembers}</TableCell>
                           <TableCell className="text-center">{metric.endingMembers}</TableCell>
                           <TableCell className="text-center">
-                            <Badge 
-                              variant={metric.churnRate > 10 ? "destructive" : metric.churnRate > 5 ? "secondary" : "default"}
-                              className="font-bold"
-                            >
+                            <Badge variant={metric.churnRate > 10 ? "destructive" : metric.churnRate > 5 ? "secondary" : "default"} className="font-bold">
                               {metric.churnRate}%
                             </Badge>
                           </TableCell>
                           <TableCell className="text-center text-red-600 font-medium">{metric.churnCount}</TableCell>
-                        </TableRow>
-                      ))}
+                        </TableRow>)}
                     </TableBody>
                   </Table>
                 </div>
@@ -396,8 +370,7 @@ const ChurnAnalytics = () => {
                     Expired This Month
                   </h4>
                   <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {currentMonthData.filter(m => m.status === 'Expired').map((member) => (
-                      <div key={member.uniqueId} className="p-4 bg-red-50 border border-red-200 rounded-lg">
+                    {currentMonthData.filter(m => m.status === 'Expired').map(member => <div key={member.uniqueId} className="p-4 bg-red-50 border border-red-200 rounded-lg">
                         <div className="flex justify-between items-start mb-2">
                           <h5 className="font-semibold text-slate-800">
                             {member.firstName} {member.lastName}
@@ -416,8 +389,7 @@ const ChurnAnalytics = () => {
                         <p className="text-sm text-slate-600">
                           <strong>Sessions Left:</strong> {member.sessionsLeft}
                         </p>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </div>
               </Card>
@@ -429,8 +401,7 @@ const ChurnAnalytics = () => {
                     Expiring This Month
                   </h4>
                   <div className="space-y-3 max-h-96 overflow-y-auto">
-                    {currentMonthData.filter(m => m.status === 'Active').map((member) => (
-                      <div key={member.uniqueId} className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
+                    {currentMonthData.filter(m => m.status === 'Active').map(member => <div key={member.uniqueId} className="p-4 bg-orange-50 border border-orange-200 rounded-lg">
                         <div className="flex justify-between items-start mb-2">
                           <h5 className="font-semibold text-slate-800">
                             {member.firstName} {member.lastName}
@@ -449,8 +420,7 @@ const ChurnAnalytics = () => {
                         <p className="text-sm text-slate-600">
                           <strong>Sessions Left:</strong> {member.sessionsLeft}
                         </p>
-                      </div>
-                    ))}
+                      </div>)}
                   </div>
                 </div>
               </Card>
@@ -458,8 +428,6 @@ const ChurnAnalytics = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
-  );
+    </div>;
 };
-
 export default ChurnAnalytics;
