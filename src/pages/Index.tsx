@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -36,6 +35,7 @@ const Index = () => {
   });
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [quickFilter, setQuickFilter] = useState<string>('all');
+  const [localMembershipData, setLocalMembershipData] = useState<MembershipData[]>([]);
 
   const { data: membershipData = [], isLoading, error, refetch } = useQuery({
     queryKey: ['membershipData'],
@@ -44,10 +44,26 @@ const Index = () => {
   });
 
   useEffect(() => {
+    if (membershipData) {
+      setLocalMembershipData(membershipData);
+    }
+  }, [membershipData]);
+
+  useEffect(() => {
     if (error) {
       toast.error("Failed to fetch membership data. Using sample data for demonstration.");
     }
   }, [error]);
+
+  const handleAnnotationUpdate = (memberId: string, comments: string, notes: string, tags: string[]) => {
+    setLocalMembershipData(prev => 
+      prev.map(member => 
+        member.memberId === memberId 
+          ? { ...member, comments, notes, tags }
+          : member
+      )
+    );
+  };
 
   const applyFilters = (data: MembershipData[]): MembershipData[] => {
     return data.filter(member => {
@@ -105,13 +121,13 @@ const Index = () => {
     }
   };
 
-  const filteredData = applyQuickFilter(applyFilters(membershipData));
-  const activeMembers = membershipData.filter(member => member.status === 'Active');
-  const expiredMembers = membershipData.filter(member => member.status === 'Expired');
-  const membersWithSessions = membershipData.filter(member => member.sessionsLeft > 0);
+  const filteredData = applyQuickFilter(applyFilters(localMembershipData));
+  const activeMembers = localMembershipData.filter(member => member.status === 'Active');
+  const expiredMembers = localMembershipData.filter(member => member.status === 'Expired');
+  const membersWithSessions = localMembershipData.filter(member => member.sessionsLeft > 0);
 
-  const availableLocations = [...new Set(membershipData.map(member => member.location).filter(l => l && l !== '-'))];
-  const availableMembershipTypes = [...new Set(membershipData.map(member => member.membershipName))];
+  const availableLocations = [...new Set(localMembershipData.map(member => member.location).filter(l => l && l !== '-'))];
+  const availableMembershipTypes = [...new Set(localMembershipData.map(member => member.membershipName))];
 
   const handleRefresh = () => {
     refetch();
@@ -141,7 +157,6 @@ const Index = () => {
       <div className="fixed inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none" />
       
       <div className="relative container mx-auto p-6 space-y-8">
-        {/* Enhanced Header */}
         <div className="flex items-center justify-between animate-fade-in">
           <div className="space-y-3">
             <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-primary to-purple-600 bg-clip-text text-transparent">
@@ -164,19 +179,17 @@ const Index = () => {
           </div>
         </div>
 
-        {/* Enhanced Quick Filters */}
         <QuickFilters
           quickFilter={quickFilter}
           onQuickFilterChange={setQuickFilter}
-          membershipData={membershipData}
+          membershipData={localMembershipData}
           availableLocations={availableLocations}
         />
 
-        {/* Enhanced Metrics Cards */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
           <MetricCard
             title="Total Members"
-            value={membershipData.length}
+            value={localMembershipData.length}
             icon={Users}
             change="+12% from last month"
             trend="up"
@@ -197,19 +210,18 @@ const Index = () => {
           />
           <MetricCard
             title="Total Sessions"
-            value={membershipData.reduce((sum, member) => sum + member.sessionsLeft, 0)}
+            value={localMembershipData.reduce((sum, member) => sum + member.sessionsLeft, 0)}
             icon={Dumbbell}
             change="+15% from last month"
             trend="up"
           />
         </div>
 
-        {/* Enhanced Charts */}
         <div className="animate-fade-in">
           <MembershipChart data={filteredData} />
         </div>
 
-        {/* Enhanced Tabbed Data Tables */}
+        {/* Enhanced Tabbed Data Tables with annotation support */}
         <div className="animate-fade-in">
           <Tabs defaultValue="overview" className="space-y-6">
             <Card className="p-1 border-border/50 bg-card/30 backdrop-blur-sm">
@@ -249,6 +261,7 @@ const Index = () => {
               <DataTable 
                 data={filteredData} 
                 title="All Members Overview"
+                onAnnotationUpdate={handleAnnotationUpdate}
               />
             </TabsContent>
 
@@ -256,6 +269,7 @@ const Index = () => {
               <DataTable 
                 data={filteredData.filter(member => member.status === 'Active')} 
                 title="Active Members"
+                onAnnotationUpdate={handleAnnotationUpdate}
               />
             </TabsContent>
 
@@ -263,6 +277,7 @@ const Index = () => {
               <DataTable 
                 data={filteredData.filter(member => member.status === 'Expired')} 
                 title="Expired Members"
+                onAnnotationUpdate={handleAnnotationUpdate}
               />
             </TabsContent>
 
@@ -271,17 +286,18 @@ const Index = () => {
                 <DataTable 
                   data={filteredData.filter(member => member.sessionsLeft > 0)} 
                   title="Members with Remaining Sessions"
+                  onAnnotationUpdate={handleAnnotationUpdate}
                 />
                 <DataTable 
                   data={filteredData.filter(member => member.sessionsLeft === 0)} 
                   title="Members with No Sessions"
+                  onAnnotationUpdate={handleAnnotationUpdate}
                 />
               </div>
             </TabsContent>
           </Tabs>
         </div>
 
-        {/* Filter Sidebar */}
         <FilterSidebar
           isOpen={isFilterOpen}
           onClose={() => setIsFilterOpen(false)}

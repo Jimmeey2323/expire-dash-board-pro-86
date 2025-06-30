@@ -16,6 +16,19 @@ export interface MembershipData {
   frozen: string;
   paid: string;
   status: 'Active' | 'Expired';
+  // New fields for user annotations
+  comments?: string;
+  notes?: string;
+  tags?: string[];
+}
+
+export interface MemberAnnotation {
+  memberId: string;
+  email: string;
+  comments: string;
+  notes: string;
+  tags: string;
+  lastUpdated: string;
 }
 
 export interface FilterOptions {
