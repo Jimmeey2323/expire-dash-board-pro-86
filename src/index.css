@@ -9,7 +9,7 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 0 0% 98%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -96,6 +96,15 @@ All colors MUST be HSL.
     @apply bg-background text-foreground transition-colors duration-300;
     font-feature-settings: "rlig" 1, "calt" 1;
   }
+  
+  /* Improved light mode text visibility */
+  .light {
+    --foreground: 222.2 84% 4.9%;
+    --muted-foreground: 215.4 16.3% 36.9%;
+    --card-foreground: 222.2 84% 4.9%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+  }
 }
 
 @layer utilities {
@@ -128,10 +137,37 @@ All colors MUST be HSL.
   }
 
   .glass-effect {
-    @apply backdrop-blur-xl bg-white/10 dark:bg-black/10 border border-white/20 dark:border-white/10;
+    @apply backdrop-blur-xl bg-white/80 dark:bg-black/10 border border-white/40 dark:border-white/10;
   }
 
   .gradient-bg {
     background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary)) 100%);
+  }
+  
+  /* Better light mode card backgrounds */
+  .light .bg-card\/30 {
+    @apply bg-white/60;
+  }
+  
+  .light .bg-card\/50 {
+    @apply bg-white/90;
+  }
+  
+  .light .bg-card\/80 {
+    @apply bg-white/95;
+  }
+  
+  /* Improved border visibility in light mode */
+  .light .border-border\/50 {
+    @apply border-gray-200/80;
+  }
+  
+  /* Better text contrast in light mode */
+  .light .text-muted-foreground {
+    @apply text-gray-600;
+  }
+  
+  .light .text-foreground {
+    @apply text-gray-900;
   }
 }

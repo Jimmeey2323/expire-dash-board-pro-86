@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -92,7 +93,7 @@ const Index = () => {
         return data.filter(member => new Date(member.orderDate) >= sevenDaysAgo);
       case 'expiring':
         return data.filter(member => {
-          const endDate = new Date(m.endDate);
+          const endDate = new Date(member.endDate);
           return endDate >= now && endDate <= new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
         });
       default:
@@ -105,12 +106,12 @@ const Index = () => {
   };
 
   const filteredData = applyQuickFilter(applyFilters(membershipData));
-  const activeMembers = membershipData.filter(m => m.status === 'Active');
-  const expiredMembers = membershipData.filter(m => m.status === 'Expired');
-  const membersWithSessions = membershipData.filter(m => m.sessionsLeft > 0);
+  const activeMembers = membershipData.filter(member => member.status === 'Active');
+  const expiredMembers = membershipData.filter(member => member.status === 'Expired');
+  const membersWithSessions = membershipData.filter(member => member.sessionsLeft > 0);
 
-  const availableLocations = [...new Set(membershipData.map(m => m.location).filter(l => l && l !== '-'))];
-  const availableMembershipTypes = [...new Set(membershipData.map(m => m.membershipName))];
+  const availableLocations = [...new Set(membershipData.map(member => member.location).filter(l => l && l !== '-'))];
+  const availableMembershipTypes = [...new Set(membershipData.map(member => member.membershipName))];
 
   const handleRefresh = () => {
     refetch();
@@ -196,7 +197,7 @@ const Index = () => {
           />
           <MetricCard
             title="Total Sessions"
-            value={membershipData.reduce((sum, m) => sum + m.sessionsLeft, 0)}
+            value={membershipData.reduce((sum, member) => sum + member.sessionsLeft, 0)}
             icon={Dumbbell}
             change="+15% from last month"
             trend="up"
@@ -253,14 +254,14 @@ const Index = () => {
 
             <TabsContent value="active" className="space-y-6">
               <DataTable 
-                data={filteredData.filter(m => m.status === 'Active')} 
+                data={filteredData.filter(member => member.status === 'Active')} 
                 title="Active Members"
               />
             </TabsContent>
 
             <TabsContent value="expired" className="space-y-6">
               <DataTable 
-                data={filteredData.filter(m => m.status === 'Expired')} 
+                data={filteredData.filter(member => member.status === 'Expired')} 
                 title="Expired Members"
               />
             </TabsContent>
@@ -268,11 +269,11 @@ const Index = () => {
             <TabsContent value="sessions" className="space-y-6">
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 <DataTable 
-                  data={filteredData.filter(m => m.sessionsLeft > 0)} 
+                  data={filteredData.filter(member => member.sessionsLeft > 0)} 
                   title="Members with Remaining Sessions"
                 />
                 <DataTable 
-                  data={filteredData.filter(m => m.sessionsLeft === 0)} 
+                  data={filteredData.filter(member => member.sessionsLeft === 0)} 
                   title="Members with No Sessions"
                 />
               </div>
