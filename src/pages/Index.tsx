@@ -11,6 +11,7 @@ import { CollapsibleFilters } from "@/components/CollapsibleFilters";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { googleSheetsService } from "@/services/googleSheets";
 import { MembershipData, FilterOptions } from "@/types/membership";
+import { Link } from "react-router-dom";
 import { 
   Users, 
   UserCheck, 
@@ -21,6 +22,7 @@ import {
   RefreshCw,
   Building2,
   TrendingUp,
+  TrendingDown,
   Calendar,
   AlertTriangle
 } from "lucide-react";
@@ -178,6 +180,15 @@ const Index = () => {
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
+            <Link to="/churn-analytics">
+              <Button 
+                variant="outline" 
+                className="border-red-300 hover:bg-red-50 text-red-700 shadow-sm"
+              >
+                <TrendingDown className="h-4 w-4 mr-2" />
+                Churn Analytics
+              </Button>
+            </Link>
             <Button 
               onClick={handleRefresh} 
               variant="outline" 
