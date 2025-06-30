@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
@@ -8,7 +7,7 @@ import { MetricCard } from "@/components/MetricCard";
 import { FilterSidebar } from "@/components/FilterSidebar";
 import { DataTable } from "@/components/DataTable";
 import { MembershipChart } from "@/components/MembershipChart";
-import { QuickFilters } from "@/components/QuickFilters";
+import { CollapsibleFilters } from "@/components/CollapsibleFilters";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { googleSheetsService } from "@/services/googleSheets";
 import { MembershipData, FilterOptions } from "@/types/membership";
@@ -20,8 +19,10 @@ import {
   Dumbbell,
   Activity,
   RefreshCw,
-  BarChart3,
-  Building2
+  Building2,
+  TrendingUp,
+  Calendar,
+  AlertTriangle
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -125,6 +126,11 @@ const Index = () => {
   const activeMembers = localMembershipData.filter(member => member.status === 'Active');
   const expiredMembers = localMembershipData.filter(member => member.status === 'Expired');
   const membersWithSessions = localMembershipData.filter(member => member.sessionsLeft > 0);
+  const expiringMembers = localMembershipData.filter(member => {
+    const endDate = new Date(member.endDate);
+    const now = new Date();
+    return endDate >= now && endDate <= new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+  });
 
   const availableLocations = [...new Set(localMembershipData.map(member => member.location).filter(l => l && l !== '-'))];
   const availableMembershipTypes = [...new Set(localMembershipData.map(member => member.membershipName))];
@@ -136,63 +142,63 @@ const Index = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-subtle flex items-center justify-center">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center">
         <div className="text-center space-y-6 animate-fade-in">
-          <div className="business-card-elevated p-8 max-w-sm mx-auto">
-            <RefreshCw className="h-12 w-12 text-primary animate-spin mx-auto mb-4" />
-            <h2 className="text-xl font-semibold text-heading mb-2">
+          <Card className="p-8 max-w-sm mx-auto bg-white shadow-2xl border-2 border-slate-200">
+            <RefreshCw className="h-12 w-12 text-blue-600 animate-spin mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-slate-900 mb-2">
               Loading Dashboard
             </h2>
-            <p className="text-body">Fetching membership data...</p>
-          </div>
+            <p className="text-slate-600">Fetching membership data...</p>
+          </Card>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-subtle">
-      <div className="container-constrained section-spacing space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+      <div className="container mx-auto px-6 py-8 space-y-8">
         {/* Professional Header */}
         <div className="flex items-center justify-between animate-fade-in">
           <div className="space-y-1">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 bg-primary text-primary-foreground rounded-xl shadow-sm">
-                <Building2 className="h-6 w-6" />
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-2xl shadow-lg">
+                <Building2 className="h-7 w-7" />
               </div>
               <div>
-                <h1 className="text-3xl font-bold text-heading">
+                <h1 className="text-4xl font-bold text-slate-900">
                   Membership Analytics
                 </h1>
-                <p className="text-body font-medium">
+                <p className="text-slate-600 font-medium text-lg">
                   Professional membership management dashboard
                 </p>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-4">
             <ThemeToggle />
             <Button 
               onClick={handleRefresh} 
               variant="outline" 
-              className="btn-secondary"
+              className="border-slate-300 hover:bg-white shadow-sm"
             >
               <RefreshCw className="h-4 w-4 mr-2" />
               Refresh
             </Button>
             <Button 
               onClick={() => setIsFilterOpen(true)} 
-              className="btn-primary"
+              className="bg-blue-600 hover:bg-blue-700 shadow-lg"
             >
               <Filter className="h-4 w-4 mr-2" />
-              Filters
+              Advanced Filters
             </Button>
           </div>
         </div>
 
-        {/* Quick Filters */}
+        {/* Collapsible Filters */}
         <div className="animate-slide-up">
-          <QuickFilters
+          <CollapsibleFilters
             quickFilter={quickFilter}
             onQuickFilterChange={setQuickFilter}
             membershipData={localMembershipData}
@@ -200,14 +206,21 @@ const Index = () => {
           />
         </div>
 
-        {/* Metrics Grid */}
-        <div className="grid-responsive animate-slide-up">
+        {/* Enhanced Metrics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-slide-up">
           <MetricCard
             title="Total Members"
             value={localMembershipData.length}
             icon={Users}
             change="+12% from last month"
             trend="up"
+            tooltip="Total number of registered members across all locations and membership types"
+            drillDownData={[
+              { label: 'This Month', value: 25 },
+              { label: 'Last Month', value: 18 },
+              { label: 'Active', value: activeMembers.length },
+              { label: 'Inactive', value: expiredMembers.length }
+            ]}
           />
           <MetricCard
             title="Active Members"
@@ -215,6 +228,13 @@ const Index = () => {
             icon={UserCheck}
             change="+5% from last month"
             trend="up"
+            tooltip="Members with active subscriptions and valid access to facilities"
+            drillDownData={[
+              { label: 'New', value: 12 },
+              { label: 'Renewed', value: 8 },
+              { label: 'With Sessions', value: membersWithSessions.length },
+              { label: 'Expiring Soon', value: expiringMembers.length }
+            ]}
           />
           <MetricCard
             title="Expired Members"
@@ -222,50 +242,64 @@ const Index = () => {
             icon={UserX}
             change="-8% from last month"
             trend="down"
+            tooltip="Members whose subscriptions have expired and need renewal"
+            drillDownData={[
+              { label: 'This Week', value: 3 },
+              { label: 'This Month', value: 8 },
+              { label: 'Recoverable', value: 15 },
+              { label: 'Lost', value: 5 }
+            ]}
           />
           <MetricCard
-            title="Available Sessions"
+            title="Total Sessions"
             value={localMembershipData.reduce((sum, member) => sum + member.sessionsLeft, 0)}
             icon={Dumbbell}
             change="+15% from last month"
             trend="up"
+            tooltip="Total remaining sessions across all active memberships"
+            drillDownData={[
+              { label: 'Available', value: localMembershipData.reduce((sum, member) => sum + member.sessionsLeft, 0) },
+              { label: 'Used This Month', value: 156 },
+              { label: 'Avg per Member', value: Math.round(localMembershipData.reduce((sum, member) => sum + member.sessionsLeft, 0) / localMembershipData.length) },
+              { label: 'Peak Usage', value: 45 }
+            ]}
           />
         </div>
 
-        {/* Chart */}
+        {/* Enhanced Chart */}
         <div className="animate-slide-up">
           <MembershipChart data={filteredData} />
         </div>
 
-        {/* Data Tables */}
+        {/* Enhanced Data Tables */}
         <div className="animate-slide-up">
           <Tabs defaultValue="overview" className="space-y-6">
-            <Card className="business-card p-1">
-              <TabsList className="grid w-full grid-cols-4 bg-transparent gap-1">
+            <Card className="p-2 bg-white border-2 border-slate-100 shadow-sm">
+              <TabsList className="grid w-full grid-cols-4 bg-slate-50 gap-1 p-1">
                 <TabsTrigger 
                   value="overview" 
-                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground font-medium"
+                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white font-semibold transition-all duration-200"
                 >
                   <Activity className="h-4 w-4 mr-2" />
                   Overview
                 </TabsTrigger>
                 <TabsTrigger 
                   value="active" 
-                  className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white font-medium"
+                  className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white font-semibold transition-all duration-200"
                 >
                   <UserCheck className="h-4 w-4 mr-2" />
-                  Active
+                  Active ({activeMembers.length})
                 </TabsTrigger>
                 <TabsTrigger 
                   value="expired" 
-                  className="data-[state=active]:bg-red-600 data-[state=active]:text-white font-medium"
+                  className="data-[state=active]:bg-red-600 data-[state=active]:text-white font-semibold transition-all duration-200"
                 >
                   <UserX className="h-4 w-4 mr-2" />
-                  Expired
+                  Expired ({expiredMembers.length})
                 </TabsTrigger>
                 <TabsTrigger 
                   value="sessions" 
-                  className="data-[state=active]:bg-blue-600 data-[state=active]:text-white font-medium"
+                  className="data-[state=active]:bg-purple-600 data-[state=active]:text-white font-semibold transition-all duration-200"
                 >
                   <Dumbbell className="h-4 w-4 mr-2" />
                   Sessions

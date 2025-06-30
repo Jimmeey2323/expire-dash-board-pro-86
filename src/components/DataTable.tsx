@@ -1,11 +1,11 @@
-
 import { useState, useMemo } from "react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { ChevronDown, ChevronUp, Search, ArrowUpDown, MessageSquare, FileText } from "lucide-react";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { ChevronDown, ChevronUp, Search, ArrowUpDown, MessageSquare, FileText, Eye, TrendingUp, Calendar } from "lucide-react";
 import { MembershipData } from "@/types/membership";
 import { MemberAnnotations } from "./MemberAnnotations";
 
@@ -26,7 +26,8 @@ export const DataTable = ({ data, title, className = '', onAnnotationUpdate }: D
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedMember, setSelectedMember] = useState<MembershipData | null>(null);
   const [isAnnotationOpen, setIsAnnotationOpen] = useState(false);
-  const itemsPerPage = 10;
+  const [expandedRows, setExpandedRows] = useState<Set<string>>(new Set());
+  const itemsPerPage = 15;
 
   const filteredAndSortedData = useMemo(() => {
     let filtered = data.filter(item =>
@@ -68,6 +69,16 @@ export const DataTable = ({ data, title, className = '', onAnnotationUpdate }: D
     return sortDirection === 'asc' ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />;
   };
 
+  const toggleRowExpansion = (memberId: string) => {
+    const newExpanded = new Set(expandedRows);
+    if (newExpanded.has(memberId)) {
+      newExpanded.delete(memberId);
+    } else {
+      newExpanded.add(memberId);
+    }
+    setExpandedRows(newExpanded);
+  };
+
   const handleOpenAnnotations = (member: MembershipData) => {
     setSelectedMember(member);
     setIsAnnotationOpen(true);
@@ -81,178 +92,300 @@ export const DataTable = ({ data, title, className = '', onAnnotationUpdate }: D
     setSelectedMember(null);
   };
 
+  const getDaysUntilExpiry = (endDate: string) => {
+    const today = new Date();
+    const expiry = new Date(endDate);
+    const diffTime = expiry.getTime() - today.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
   return (
     <>
-      <Card className={`bg-card/50 backdrop-blur-sm border-border/50 ${className}`}>
-        <div className="p-6">
-          <div className="flex items-center justify-between mb-6">
-            <h3 className="text-xl font-semibold text-foreground">{title}</h3>
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input
-                  placeholder="Search members..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 bg-background/50 border-border/50 w-64"
-                />
+      <TooltipProvider>
+        <Card className={`business-card shadow-xl border-2 border-slate-100 ${className}`}>
+          <div className="p-8">
+            <div className="flex items-center justify-between mb-8">
+              <h3 className="text-2xl font-bold text-slate-900 flex items-center gap-3">
+                <div className="w-1 h-8 bg-gradient-to-b from-blue-600 to-purple-600 rounded-full"></div>
+                {title}
+              </h3>
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 h-5 w-5" />
+                  <Input
+                    placeholder="Search members..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-12 pr-4 py-3 bg-slate-50 border-slate-200 focus:border-blue-500 focus:ring-2 focus:ring-blue-100 rounded-xl w-80 transition-all duration-200"
+                  />
+                </div>
+                <Badge variant="secondary" className="bg-blue-50 text-blue-700 px-4 py-2 text-sm font-semibold border border-blue-200">
+                  {filteredAndSortedData.length} records
+                </Badge>
               </div>
-              <Badge variant="secondary" className="bg-muted/50 text-muted-foreground">
-                {filteredAndSortedData.length} records
-              </Badge>
             </div>
-          </div>
 
-          <div className="border border-border/50 rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50 border-border/50">
-                  <TableHead className="text-muted-foreground">
-                    <Button
-                      variant="ghost"
-                      className="h-auto p-0 font-medium"
-                      onClick={() => handleSort('memberId')}
-                    >
-                      Member ID {getSortIcon('memberId')}
-                    </Button>
-                  </TableHead>
-                  <TableHead className="text-muted-foreground">
-                    <Button
-                      variant="ghost"
-                      className="h-auto p-0 font-medium"
-                      onClick={() => handleSort('firstName')}
-                    >
-                      Name {getSortIcon('firstName')}
-                    </Button>
-                  </TableHead>
-                  <TableHead className="text-muted-foreground">Email</TableHead>
-                  <TableHead className="text-muted-foreground">
-                    <Button
-                      variant="ghost"
-                      className="h-auto p-0 font-medium"
-                      onClick={() => handleSort('membershipName')}
-                    >
-                      Membership {getSortIcon('membershipName')}
-                    </Button>
-                  </TableHead>
-                  <TableHead className="text-muted-foreground">
-                    <Button
-                      variant="ghost"
-                      className="h-auto p-0 font-medium"
-                      onClick={() => handleSort('endDate')}
-                    >
-                      End Date {getSortIcon('endDate')}
-                    </Button>
-                  </TableHead>
-                  <TableHead className="text-muted-foreground">Location</TableHead>
-                  <TableHead className="text-muted-foreground">
-                    <Button
-                      variant="ghost"
-                      className="h-auto p-0 font-medium"
-                      onClick={() => handleSort('sessionsLeft')}
-                    >
-                      Sessions {getSortIcon('sessionsLeft')}
-                    </Button>
-                  </TableHead>
-                  <TableHead className="text-muted-foreground">
-                    <Button
-                      variant="ghost"
-                      className="h-auto p-0 font-medium"
-                      onClick={() => handleSort('status')}
-                    >
-                      Status {getSortIcon('status')}
-                    </Button>
-                  </TableHead>
-                  <TableHead className="text-muted-foreground">Tags</TableHead>
-                  <TableHead className="text-muted-foreground">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {paginatedData.map((member) => (
-                  <TableRow key={member.uniqueId} className="border-border/50 hover:bg-muted/25">
-                    <TableCell className="text-foreground font-mono">{member.memberId}</TableCell>
-                    <TableCell className="text-foreground">
-                      {member.firstName} {member.lastName}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{member.email}</TableCell>
-                    <TableCell className="text-muted-foreground">{member.membershipName}</TableCell>
-                    <TableCell className="text-muted-foreground">
-                      {new Date(member.endDate).toLocaleDateString()}
-                    </TableCell>
-                    <TableCell className="text-muted-foreground">{member.location}</TableCell>
-                    <TableCell className="text-center">
-                      <Badge variant={member.sessionsLeft > 0 ? "default" : "secondary"}>
-                        {member.sessionsLeft}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <Badge variant={member.status === 'Active' ? "default" : "destructive"}>
-                        {member.status}
-                      </Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {member.tags?.slice(0, 2).map((tag, index) => (
-                          <Badge key={index} variant="outline" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                        {member.tags && member.tags.length > 2 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{member.tags.length - 2}
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex gap-1">
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleOpenAnnotations(member)}
-                          className="h-8 w-8 p-0"
-                          title="Add notes, comments & tags"
-                        >
-                          <FileText className="h-4 w-4" />
-                        </Button>
-                        {(member.comments || member.notes) && (
-                          <div className="w-2 h-2 bg-primary rounded-full mt-2" title="Has annotations" />
-                        )}
-                      </div>
-                    </TableCell>
+            <div className="border-2 border-slate-100 rounded-2xl overflow-hidden bg-white shadow-sm">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-gradient-to-r from-slate-50 to-slate-100 border-b-2 border-slate-200 h-12">
+                    <TableHead className="text-slate-700 font-bold h-12">
+                      <Button
+                        variant="ghost"
+                        className="h-auto p-0 font-bold text-slate-700 hover:text-blue-600"
+                        onClick={() => handleSort('memberId')}
+                      >
+                        Member ID {getSortIcon('memberId')}
+                      </Button>
+                    </TableHead>
+                    <TableHead className="text-slate-700 font-bold h-12">
+                      <Button
+                        variant="ghost"
+                        className="h-auto p-0 font-bold text-slate-700 hover:text-blue-600"
+                        onClick={() => handleSort('firstName')}
+                      >
+                        Name {getSortIcon('firstName')}
+                      </Button>
+                    </TableHead>
+                    <TableHead className="text-slate-700 font-bold h-12">Email</TableHead>
+                    <TableHead className="text-slate-700 font-bold h-12">
+                      <Button
+                        variant="ghost"
+                        className="h-auto p-0 font-bold text-slate-700 hover:text-blue-600"
+                        onClick={() => handleSort('membershipName')}
+                      >
+                        Membership {getSortIcon('membershipName')}
+                      </Button>
+                    </TableHead>
+                    <TableHead className="text-slate-700 font-bold h-12">
+                      <Button
+                        variant="ghost"
+                        className="h-auto p-0 font-bold text-slate-700 hover:text-blue-600"
+                        onClick={() => handleSort('endDate')}
+                      >
+                        Expiry {getSortIcon('endDate')}
+                      </Button>
+                    </TableHead>
+                    <TableHead className="text-slate-700 font-bold h-12">Location</TableHead>
+                    <TableHead className="text-slate-700 font-bold h-12">
+                      <Button
+                        variant="ghost"
+                        className="h-auto p-0 font-bold text-slate-700 hover:text-blue-600"
+                        onClick={() => handleSort('sessionsLeft')}
+                      >
+                        Sessions {getSortIcon('sessionsLeft')}
+                      </Button>
+                    </TableHead>
+                    <TableHead className="text-slate-700 font-bold h-12">
+                      <Button
+                        variant="ghost"
+                        className="h-auto p-0 font-bold text-slate-700 hover:text-blue-600"
+                        onClick={() => handleSort('status')}
+                      >
+                        Status {getSortIcon('status')}
+                      </Button>
+                    </TableHead>
+                    <TableHead className="text-slate-700 font-bold h-12">Tags</TableHead>
+                    <TableHead className="text-slate-700 font-bold h-12">Actions</TableHead>
                   </TableRow>
-                ))}
-              </TableBody>
-            </Table>
-          </div>
-
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-6">
-              <p className="text-muted-foreground text-sm">
-                Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSortedData.length)} of {filteredAndSortedData.length} results
-              </p>
-              <div className="flex gap-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
-                  disabled={currentPage === 1}
-                >
-                  Previous
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
-                  disabled={currentPage === totalPages}
-                >
-                  Next
-                </Button>
-              </div>
+                </TableHeader>
+                <TableBody>
+                  {paginatedData.map((member) => {
+                    const daysUntilExpiry = getDaysUntilExpiry(member.endDate);
+                    const isExpiringSoon = daysUntilExpiry <= 30 && daysUntilExpiry > 0;
+                    const isExpanded = expandedRows.has(member.memberId);
+                    
+                    return (
+                      <>
+                        <TableRow 
+                          key={member.uniqueId} 
+                          className="border-b border-slate-100 hover:bg-slate-50 transition-all duration-150 h-10"
+                          style={{ height: '40px' }}
+                        >
+                          <TableCell className="text-slate-800 font-mono text-sm h-10 py-2">{member.memberId}</TableCell>
+                          <TableCell className="text-slate-800 font-medium h-10 py-2">
+                            <div className="flex items-center gap-2">
+                              {member.firstName} {member.lastName}
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={() => toggleRowExpansion(member.memberId)}
+                                className="h-6 w-6 p-0 hover:bg-blue-100"
+                              >
+                                <Eye className="h-3 w-3" />
+                              </Button>
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-slate-600 h-10 py-2">{member.email}</TableCell>
+                          <TableCell className="text-slate-600 h-10 py-2">
+                            <Tooltip>
+                              <TooltipTrigger>
+                                <span className="truncate max-w-32 block">
+                                  {member.membershipName}
+                                </span>
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{member.membershipName}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TableCell>
+                          <TableCell className="text-slate-600 h-10 py-2">
+                            <div className="flex items-center gap-2">
+                              <span>{new Date(member.endDate).toLocaleDateString()}</span>
+                              {isExpiringSoon && (
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <Badge variant="outline" className="text-xs bg-amber-50 text-amber-700 border-amber-200">
+                                      {daysUntilExpiry}d
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <p>Expires in {daysUntilExpiry} days</p>
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="text-slate-600 h-10 py-2">{member.location}</TableCell>
+                          <TableCell className="text-center h-10 py-2">
+                            <Badge 
+                              variant={member.sessionsLeft > 5 ? "default" : member.sessionsLeft > 0 ? "secondary" : "destructive"}
+                              className="font-bold"
+                            >
+                              {member.sessionsLeft}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="h-10 py-2">
+                            <Badge 
+                              variant={member.status === 'Active' ? "default" : "destructive"}
+                              className={member.status === 'Active' ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200' : ''}
+                            >
+                              {member.status}
+                            </Badge>
+                          </TableCell>
+                          <TableCell className="h-10 py-2">
+                            <div className="flex flex-wrap gap-1">
+                              {member.tags?.slice(0, 2).map((tag, index) => (
+                                <Badge key={index} variant="outline" className="text-xs bg-blue-50 text-blue-700 border-blue-200">
+                                  {tag}
+                                </Badge>
+                              ))}
+                              {member.tags && member.tags.length > 2 && (
+                                <Tooltip>
+                                  <TooltipTrigger>
+                                    <Badge variant="outline" className="text-xs bg-slate-50 text-slate-600">
+                                      +{member.tags.length - 2}
+                                    </Badge>
+                                  </TooltipTrigger>
+                                  <TooltipContent>
+                                    <div className="space-y-1">
+                                      {member.tags.slice(2).map((tag, index) => (
+                                        <div key={index} className="text-xs">{tag}</div>
+                                      ))}
+                                    </div>
+                                  </TooltipContent>
+                                </Tooltip>
+                              )}
+                            </div>
+                          </TableCell>
+                          <TableCell className="h-10 py-2">
+                            <div className="flex gap-1">
+                              <Tooltip>
+                                <TooltipTrigger>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleOpenAnnotations(member)}
+                                    className="h-8 w-8 p-0 hover:bg-blue-100"
+                                  >
+                                    <FileText className="h-4 w-4" />
+                                  </Button>
+                                </TooltipTrigger>
+                                <TooltipContent>
+                                  <p>Add notes & tags</p>
+                                </TooltipContent>
+                              </Tooltip>
+                              {(member.comments || member.notes) && (
+                                <div className="w-2 h-2 bg-blue-600 rounded-full mt-3" title="Has annotations" />
+                              )}
+                            </div>
+                          </TableCell>
+                        </TableRow>
+                        
+                        {isExpanded && (
+                          <TableRow className="bg-slate-50 border-b border-slate-200">
+                            <TableCell colSpan={10} className="p-6">
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+                                <div className="space-y-2">
+                                  <h4 className="font-semibold text-slate-700 flex items-center gap-2">
+                                    <Calendar className="h-4 w-4" />
+                                    Order Details
+                                  </h4>
+                                  <p className="text-sm text-slate-600">Order Date: {new Date(member.orderDate).toLocaleDateString()}</p>
+                                  <p className="text-sm text-slate-600">Start Date: {new Date(member.startDate).toLocaleDateString()}</p>
+                                </div>
+                                <div className="space-y-2">
+                                  <h4 className="font-semibold text-slate-700 flex items-center gap-2">
+                                    <TrendingUp className="h-4 w-4" />
+                                    Activity
+                                  </h4>
+                                  <p className="text-sm text-slate-600">Sessions Used: {(member.totalSessions || 0) - member.sessionsLeft}</p>
+                                  <p className="text-sm text-slate-600">Total Sessions: {member.totalSessions || 'N/A'}</p>
+                                </div>
+                                <div className="space-y-2">
+                                  <h4 className="font-semibold text-slate-700">Contact</h4>
+                                  <p className="text-sm text-slate-600">Phone: {member.phone || 'N/A'}</p>
+                                  <p className="text-sm text-slate-600">Address: {member.address || 'N/A'}</p>
+                                </div>
+                                <div className="space-y-2">
+                                  <h4 className="font-semibold text-slate-700">Notes</h4>
+                                  <p className="text-sm text-slate-600">{member.comments || member.notes || 'No notes available'}</p>
+                                </div>
+                              </div>
+                            </TableCell>
+                          </TableRow>
+                        )}
+                      </>
+                    );
+                  })}
+                </TableBody>
+              </Table>
             </div>
-          )}
-        </div>
-      </Card>
+
+            {totalPages > 1 && (
+              <div className="flex items-center justify-between mt-8 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <p className="text-slate-600 text-sm font-medium">
+                  Showing {(currentPage - 1) * itemsPerPage + 1} to {Math.min(currentPage * itemsPerPage, filteredAndSortedData.length)} of {filteredAndSortedData.length} results
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))}
+                    disabled={currentPage === 1}
+                    className="border-slate-300 hover:bg-white"
+                  >
+                    Previous
+                  </Button>
+                  <div className="flex items-center px-3 py-1 bg-white border border-slate-300 rounded text-sm font-medium">
+                    Page {currentPage} of {totalPages}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))}
+                    disabled={currentPage === totalPages}
+                    className="border-slate-300 hover:bg-white"
+                  >
+                    Next
+                  </Button>
+                </div>
+              </div>
+            )}
+          </div>
+        </Card>
+      </TooltipProvider>
 
       <MemberAnnotations
         member={selectedMember}
