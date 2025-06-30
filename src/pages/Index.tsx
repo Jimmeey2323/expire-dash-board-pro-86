@@ -21,7 +21,10 @@ import {
   Activity,
   RefreshCw,
   Settings,
-  BarChart3
+  BarChart3,
+  Sparkles,
+  Crown,
+  Zap
 } from "lucide-react";
 import { toast } from "sonner";
 
@@ -136,15 +139,19 @@ const Index = () => {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <div className="text-center space-y-6 animate-fade-in">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-blue-900 dark:to-indigo-900 flex items-center justify-center">
+        <div className="text-center space-y-8 animate-fade-in">
           <div className="relative">
-            <RefreshCw className="h-16 w-16 text-primary animate-spin mx-auto" />
-            <div className="absolute inset-0 bg-primary/20 rounded-full animate-ping" />
+            <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-purple-600 rounded-full animate-ping opacity-20" />
+            <div className="relative bg-white dark:bg-slate-800 p-6 rounded-2xl shadow-2xl border border-white/20">
+              <RefreshCw className="h-12 w-12 text-blue-600 animate-spin mx-auto" />
+            </div>
           </div>
-          <div className="space-y-2">
-            <p className="text-xl font-semibold text-foreground">Loading Dashboard</p>
-            <p className="text-muted-foreground">Fetching membership data...</p>
+          <div className="space-y-3">
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              Loading Dashboard
+            </h2>
+            <p className="text-slate-600 dark:text-slate-400 font-medium">Fetching membership data...</p>
           </div>
         </div>
       </div>
@@ -152,47 +159,74 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background transition-colors duration-300">
-      {/* Background gradient */}
-      <div className="fixed inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/5 pointer-events-none" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100 dark:from-slate-900 dark:via-blue-900 dark:to-indigo-900 transition-all duration-500">
+      {/* Premium background elements */}
+      <div className="fixed inset-0 bg-gradient-to-br from-blue-500/5 via-purple-500/5 to-pink-500/5 pointer-events-none" />
+      <div className="fixed top-0 left-1/4 w-72 h-72 bg-blue-500/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse" />
+      <div className="fixed top-0 right-1/4 w-72 h-72 bg-purple-500/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse delay-1000" />
+      <div className="fixed bottom-0 left-1/3 w-72 h-72 bg-pink-500/10 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-pulse delay-2000" />
       
-      <div className="relative container mx-auto p-6 space-y-8">
+      <div className="relative container mx-auto p-8 space-y-10">
+        {/* Premium Header */}
         <div className="flex items-center justify-between animate-fade-in">
-          <div className="space-y-3">
-            <h1 className="text-5xl font-bold bg-gradient-to-r from-primary via-primary to-purple-600 bg-clip-text text-transparent">
-              Studio Dashboard
-            </h1>
-            <p className="text-lg text-muted-foreground font-medium">
-              Advanced membership management & analytics platform
-            </p>
+          <div className="space-y-4">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl shadow-lg">
+                <Crown className="h-8 w-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-6xl font-black bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent leading-tight">
+                  Studio Elite
+                </h1>
+                <div className="flex items-center gap-2 mt-1">
+                  <Sparkles className="h-4 w-4 text-yellow-500" />
+                  <p className="text-lg text-slate-600 dark:text-slate-300 font-semibold">
+                    Premium Membership Analytics
+                  </p>
+                </div>
+              </div>
+            </div>
           </div>
           <div className="flex items-center gap-4">
             <ThemeToggle />
-            <Button onClick={handleRefresh} variant="outline" className="border-border/50 hover:bg-accent/50 transition-all duration-300">
-              <RefreshCw className="h-4 w-4 mr-2" />
-              Refresh
+            <Button 
+              onClick={handleRefresh} 
+              variant="outline" 
+              className="group border-2 border-blue-200 dark:border-blue-800 hover:border-blue-400 dark:hover:border-blue-600 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm hover:bg-white dark:hover:bg-slate-700 transition-all duration-300 shadow-lg hover:shadow-xl"
+            >
+              <RefreshCw className="h-4 w-4 mr-2 group-hover:rotate-180 transition-transform duration-500" />
+              Refresh Data
             </Button>
-            <Button onClick={() => setIsFilterOpen(true)} className="bg-primary hover:bg-primary/90 shadow-lg transition-all duration-300">
-              <Filter className="h-4 w-4 mr-2" />
+            <Button 
+              onClick={() => setIsFilterOpen(true)} 
+              className="group bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300 border-0"
+            >
+              <Filter className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
               Advanced Filters
+              <Zap className="h-4 w-4 ml-2 text-yellow-300" />
             </Button>
           </div>
         </div>
 
-        <QuickFilters
-          quickFilter={quickFilter}
-          onQuickFilterChange={setQuickFilter}
-          membershipData={localMembershipData}
-          availableLocations={availableLocations}
-        />
+        {/* Enhanced Quick Filters */}
+        <div className="animate-fade-in">
+          <QuickFilters
+            quickFilter={quickFilter}
+            onQuickFilterChange={setQuickFilter}
+            membershipData={localMembershipData}
+            availableLocations={availableLocations}
+          />
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 animate-fade-in">
+        {/* Premium Metrics Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-8 animate-fade-in">
           <MetricCard
             title="Total Members"
             value={localMembershipData.length}
             icon={Users}
             change="+12% from last month"
             trend="up"
+            className="group hover:shadow-2xl hover:shadow-blue-500/20 transition-all duration-500"
           />
           <MetricCard
             title="Active Members"
@@ -200,6 +234,7 @@ const Index = () => {
             icon={UserCheck}
             change="+5% from last month"
             trend="up"
+            className="group hover:shadow-2xl hover:shadow-emerald-500/20 transition-all duration-500"
           />
           <MetricCard
             title="Expired Members"
@@ -207,6 +242,7 @@ const Index = () => {
             icon={UserX}
             change="-8% from last month"
             trend="down"
+            className="group hover:shadow-2xl hover:shadow-red-500/20 transition-all duration-500"
           />
           <MetricCard
             title="Total Sessions"
@@ -214,45 +250,47 @@ const Index = () => {
             icon={Dumbbell}
             change="+15% from last month"
             trend="up"
+            className="group hover:shadow-2xl hover:shadow-purple-500/20 transition-all duration-500"
           />
         </div>
 
+        {/* Premium Chart Section */}
         <div className="animate-fade-in">
           <MembershipChart data={filteredData} />
         </div>
 
-        {/* Enhanced Tabbed Data Tables with annotation support */}
+        {/* Enhanced Tabbed Interface */}
         <div className="animate-fade-in">
-          <Tabs defaultValue="overview" className="space-y-6">
-            <Card className="p-1 border-border/50 bg-card/30 backdrop-blur-sm">
-              <TabsList className="grid w-full grid-cols-4 bg-transparent gap-1">
+          <Tabs defaultValue="overview" className="space-y-8">
+            <Card className="p-2 border-2 border-white/20 dark:border-slate-700/50 bg-white/60 dark:bg-slate-800/60 backdrop-blur-xl shadow-2xl">
+              <TabsList className="grid w-full grid-cols-4 bg-transparent gap-2 p-1">
                 <TabsTrigger 
                   value="overview" 
-                  className="data-[state=active]:bg-primary data-[state=active]:text-primary-foreground transition-all duration-300"
+                  className="group data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-purple-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-xl font-semibold"
                 >
-                  <Activity className="h-4 w-4 mr-2" />
+                  <Activity className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
                   Overview
                 </TabsTrigger>
                 <TabsTrigger 
                   value="active" 
-                  className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white transition-all duration-300"
+                  className="group data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-600 data-[state=active]:to-teal-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-xl font-semibold"
                 >
-                  <UserCheck className="h-4 w-4 mr-2" />
-                  Active Members
+                  <UserCheck className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
+                  Active
                 </TabsTrigger>
                 <TabsTrigger 
                   value="expired" 
-                  className="data-[state=active]:bg-red-600 data-[state=active]:text-white transition-all duration-300"
+                  className="group data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-600 data-[state=active]:to-rose-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-xl font-semibold"
                 >
-                  <UserX className="h-4 w-4 mr-2" />
-                  Expired Members
+                  <UserX className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
+                  Expired
                 </TabsTrigger>
                 <TabsTrigger 
                   value="sessions" 
-                  className="data-[state=active]:bg-yellow-600 data-[state=active]:text-white transition-all duration-300"
+                  className="group data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-600 data-[state=active]:to-orange-600 data-[state=active]:text-white data-[state=active]:shadow-lg transition-all duration-300 rounded-xl font-semibold"
                 >
-                  <Dumbbell className="h-4 w-4 mr-2" />
-                  Sessions Analysis
+                  <Dumbbell className="h-4 w-4 mr-2 group-hover:scale-110 transition-transform duration-300" />
+                  Sessions
                 </TabsTrigger>
               </TabsList>
             </Card>
